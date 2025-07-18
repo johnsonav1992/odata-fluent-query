@@ -32,28 +32,28 @@ export interface ComputeNumber extends ComputeExpression {
    * @param value The number or compute expression to multiply by
    * @example c.price.multiply(c.quantity) // price * quantity
    */
-  multiply(value: number | ComputeNumber): ComputeNumber
+  multiply(value: number | ComputeNumber | null): ComputeNumber
   
   /**
    * Divides this number by another number or compute expression
    * @param value The number or compute expression to divide by
    * @example c.total.divide(c.quantity) // total / quantity
    */
-  divide(value: number | ComputeNumber): ComputeNumber
+  divide(value: number | ComputeNumber | null): ComputeNumber
   
   /**
    * Adds another number or compute expression to this number
    * @param value The number or compute expression to add
    * @example c.price.add(100) // price + 100
    */
-  add(value: number | ComputeNumber): ComputeNumber
+  add(value: number | ComputeNumber | null): ComputeNumber
   
   /**
    * Subtracts another number or compute expression from this number
    * @param value The number or compute expression to subtract
    * @example c.price.subtract(c.discount) // price - discount
    */
-  subtract(value: number | ComputeNumber): ComputeNumber
+  subtract(value: number | ComputeNumber | null): ComputeNumber
 }
 
 export interface ComputeString extends ComputeExpression {
@@ -78,7 +78,7 @@ export interface ComputeString extends ComputeExpression {
    * @example c.firstName.concat(' ', c.lastName) // "John Doe"
    * @example c.name.concat(' (', c.email, ')') // "John (john@example.com)"
    */
-  concat(...values: (string | ComputeString | ComputeExpression)[]): ComputeString
+  concat(...values: (string | ComputeString | ComputeExpression | null)[]): ComputeString
 }
 
 export interface ComputeBoolean extends ComputeExpression {
@@ -87,14 +87,14 @@ export interface ComputeBoolean extends ComputeExpression {
    * @param value The boolean value or compute expression to AND with
    * @example c.isActive.and(c.isVerified) // isActive AND isVerified
    */
-  and(value: boolean | ComputeBoolean): ComputeBoolean
+  and(value: boolean | ComputeBoolean | null): ComputeBoolean
   
   /**
    * Logical OR operation with another boolean expression
    * @param value The boolean value or compute expression to OR with
    * @example c.isActive.or(c.isAdmin) // isActive OR isAdmin
    */
-  or(value: boolean | ComputeBoolean): ComputeBoolean
+  or(value: boolean | ComputeBoolean | null): ComputeBoolean
   
   /**
    * Logical NOT operation (negation)
@@ -107,14 +107,14 @@ export interface ComputeBoolean extends ComputeExpression {
    * @param value The boolean value or compute expression to compare with
    * @example c.isActive.equals(true) // isActive eq true
    */
-  equals(value: boolean | ComputeBoolean): ComputeBoolean
+  equals(value: boolean | ComputeBoolean | null): ComputeBoolean
   
   /**
    * Inequality comparison
    * @param value The boolean value or compute expression to compare with
    * @example c.isActive.notEquals(false) // isActive ne false
    */
-  notEquals(value: boolean | ComputeBoolean): ComputeBoolean
+  notEquals(value: boolean | ComputeBoolean | null): ComputeBoolean
 }
 
 export interface ComputeDate extends ComputeExpression {
@@ -123,14 +123,14 @@ export interface ComputeDate extends ComputeExpression {
    * @param duration The duration to add (ISO 8601 duration string or another date expression)
    * @example c.createdDate.add('P1D') // add 1 day
    */
-  add(duration: string | ComputeDate): ComputeDate
+  add(duration: string | ComputeDate | null): ComputeDate
   
   /**
    * Subtracts a duration from this date
    * @param duration The duration to subtract (ISO 8601 duration string or another date expression)
    * @example c.createdDate.subtract('P1M') // subtract 1 month
    */
-  subtract(duration: string | ComputeDate): ComputeDate
+  subtract(duration: string | ComputeDate | null): ComputeDate
   
   /**
    * Extracts the year component from this date as a number
@@ -197,4 +197,11 @@ export type ComputeBuilderType<T> = T extends string
 
 export type ComputeBuilder<T> = {
   [P in keyof T]: ComputeBuilderType<T[P]>
+}
+
+export type GetNextPropertyPathParams<TVal> = { 
+  propertyPath: string; 
+  value: TVal; 
+  operator: string; 
+  type: string 
 }

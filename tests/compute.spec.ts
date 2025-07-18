@@ -376,6 +376,88 @@ describe('testing compute operations', () => {
     })
   })
 
+  describe('null value handling', () => {
+    it('should handle null in mathematical operations', () => {
+      const query = odataQuery<Product>()
+        .compute(c => c.price.multiply(null).as('nullResult'))
+        .toString()
+      
+      expect(query).toBe('$compute=price mul null as nullResult')
+    })
+
+    it('should handle null in divide operations', () => {
+      const query = odataQuery<Product>()
+        .compute(c => c.price.divide(null).as('nullResult'))
+        .toString()
+      
+      expect(query).toBe('$compute=price div null as nullResult')
+    })
+
+    it('should handle null in add operations', () => {
+      const query = odataQuery<Product>()
+        .compute(c => c.price.add(null).as('nullResult'))
+        .toString()
+      
+      expect(query).toBe('$compute=price add null as nullResult')
+    })
+
+    it('should handle null in subtract operations', () => {
+      const query = odataQuery<Product>()
+        .compute(c => c.price.subtract(null).as('nullResult'))
+        .toString()
+      
+      expect(query).toBe('$compute=price sub null as nullResult')
+    })
+
+    it('should handle null in boolean and operations', () => {
+      const query = odataQuery<User>()
+        .compute(c => c.accountEnabled.and(null).as('nullResult'))
+        .toString()
+      
+      expect(query).toBe('$compute=accountEnabled and null as nullResult')
+    })
+
+    it('should handle null in boolean or operations', () => {
+      const query = odataQuery<User>()
+        .compute(c => c.accountEnabled.or(null).as('nullResult'))
+        .toString()
+      
+      expect(query).toBe('$compute=accountEnabled or null as nullResult')
+    })
+
+    it('should handle null in boolean equals operations', () => {
+      const query = odataQuery<User>()
+        .compute(c => c.accountEnabled.equals(null).as('nullResult'))
+        .toString()
+      
+      expect(query).toBe('$compute=accountEnabled eq null as nullResult')
+    })
+
+    it('should handle null in boolean notEquals operations', () => {
+      const query = odataQuery<User>()
+        .compute(c => c.accountEnabled.notEquals(null).as('nullResult'))
+        .toString()
+      
+      expect(query).toBe('$compute=accountEnabled ne null as nullResult')
+    })
+
+    it('should handle null in string concat operations', () => {
+      const query = odataQuery<User>()
+        .compute(c => c.givenName.concat(' - ', null, ' test').as('withNull'))
+        .toString()
+      
+      expect(query).toBe("$compute=concat(concat(concat(givenName,' - '),null),' test') as withNull")
+    })
+
+    it('should handle multiple null values in concat', () => {
+      const query = odataQuery<User>()
+        .compute(c => c.givenName.concat(null, null, null).as('multipleNulls'))
+        .toString()
+      
+      expect(query).toBe('$compute=concat(concat(concat(givenName,null),null),null) as multipleNulls')
+    })
+  })
+
   describe('edge cases', () => {
     it('should handle empty compute gracefully', () => {
       const query = odataQuery<Product>()

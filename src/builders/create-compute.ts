@@ -1,6 +1,16 @@
 import { QueryDescriptor } from '../models'
-import { ComputeBuilder, ComputeExpression, ComputeNumber, ComputeString, ComputeBoolean } from '../models/query-compute'
+import { ComputeBuilder, ComputeExpression, ComputeNumber, ComputeString, ComputeBoolean, GetNextPropertyPathParams } from '../models/query-compute'
 import { createQuery } from './create-query'
+
+function getNextPropertyPath<TVal>(params: GetNextPropertyPathParams<TVal>) {
+  const { propertyPath, value, operator, type } = params
+
+  return `${propertyPath} ${operator} ${value === null 
+    ? 'null' 
+    : typeof value === type
+      ? value 
+      : value?.toString()}`
+}
 
 function computeBuilder(propertyPath: string): Record<string, (...args: any[]) => unknown> {
   return {
@@ -16,8 +26,9 @@ function computeBuilder(propertyPath: string): Record<string, (...args: any[]) =
       return computeBuilder(`substring(${propertyPath},${args})`)
     },
     length: () => computeBuilder(`length(${propertyPath})`),
-    concat: (...values: (string | ComputeString | ComputeExpression)[]) => {
+    concat: (...values: (string | ComputeString | ComputeExpression | null)[]) => {
       const args = values.map(v => {
+        if (v === null) return 'null'
         if (typeof v === 'string') return `'${v}'`
         if (v && typeof v.toString === 'function') return v.toString()
 
@@ -40,26 +51,64 @@ function computeBuilder(propertyPath: string): Record<string, (...args: any[]) =
         return computeBuilder(result)
       }
     },
-    and: (value: boolean | ComputeBoolean | ComputeExpression) => 
-      computeBuilder(`${propertyPath} and ${typeof value === 'boolean' ? value : value.toString()}`),
-    or: (value: boolean | ComputeBoolean | ComputeExpression) => 
-      computeBuilder(`${propertyPath} or ${typeof value === 'boolean' ? value : value.toString()}`),
+    and: (value: boolean | ComputeBoolean | ComputeExpression | null) => 
+      computeBuilder(getNextPropertyPath({
+        propertyPath,
+        value,
+        operator: 'and',
+        type: 'boolean'
+      })),
+    or: (value: boolean | ComputeBoolean | ComputeExpression | null) => 
+      computeBuilder(getNextPropertyPath({
+        propertyPath,
+        value,
+        operator: 'or',
+        type: 'boolean'
+      })),
     not: () => computeBuilder(`not ${propertyPath}`),
-    equals: (value: boolean | ComputeBoolean | ComputeExpression) => 
-      computeBuilder(`${propertyPath} eq ${typeof value === 'boolean' ? value : value.toString()}`),
-    notEquals: (value: boolean | ComputeBoolean | ComputeExpression) => 
-      computeBuilder(`${propertyPath} ne ${typeof value === 'boolean' ? value : value.toString()}`),
-    multiply: (value: number | ComputeNumber | ComputeExpression) => 
-      computeBuilder(`${propertyPath} mul ${typeof value === 'number' ? value : value.toString()}`)
+    equals: (value: boolean | ComputeBoolean | ComputeExpression | null) => 
+      computeBuilder(getNextPropertyPath({
+        propertyPath,
+        value,
+        operator: 'eq',
+        type: 'boolean'
+      })),
+    notEquals: (value: boolean | ComputeBoolean | ComputeExpression | null) => 
+      computeBuilder(getNextPropertyPath({
+        propertyPath,
+        value,
+        operator: 'ne',
+        type: 'boolean'
+      })),
+    multiply: (value: number | ComputeNumber | ComputeExpression | null) => 
+      computeBuilder(getNextPropertyPath({
+        propertyPath,
+        value,
+        operator: 'mul',
+        type: 'number'
+      })),
+    divide: (value: number | ComputeNumber | ComputeExpression | null) => 
+      computeBuilder(getNextPropertyPath({
+        propertyPath,
+        value,
+        operator: 'div',
+        type: 'number'
+      })),
+    add: (value: number | ComputeNumber | ComputeExpression | null) => 
+      computeBuilder(getNextPropertyPath({
+        propertyPath,
+        value,
+        operator: 'add',
+        type: 'number'
+      }))
     ,
-    divide: (value: number | ComputeNumber | ComputeExpression) => 
-      computeBuilder(`${propertyPath} div ${typeof value === 'number' ? value : value.toString()}`)
-    ,
-    add: (value: number | ComputeNumber | ComputeExpression) => 
-      computeBuilder(`${propertyPath} add ${typeof value === 'number' ? value : value.toString()}`)
-    ,
-    subtract: (value: number | ComputeNumber | ComputeExpression) => 
-      computeBuilder(`${propertyPath} sub ${typeof value === 'number' ? value : value.toString()}`),
+    subtract: (value: number | ComputeNumber | ComputeExpression | null) => 
+      computeBuilder(getNextPropertyPath({
+        propertyPath,
+        value,
+        operator: 'sub',
+        type: 'number'
+      })),
     year: () => computeBuilder(`year(${propertyPath})`),
     month: () => computeBuilder(`month(${propertyPath})`),
     day: () => computeBuilder(`day(${propertyPath})`),
@@ -76,7 +125,7 @@ function makeCompute<T>(): ComputeBuilder<T> {
     get(_target, prop) {
       if (typeof prop === 'symbol') return undefined
       
-      return computeBuilder(prop.toString())
+      return computeBuilder(prop)
     }
   })
 }
