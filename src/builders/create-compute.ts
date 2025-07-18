@@ -2,24 +2,15 @@ import { QueryDescriptor } from '../models'
 import { ComputeBuilder, ComputeExpression, ComputeNumber, ComputeString, ComputeBoolean, GetNextPropertyPathParams } from '../models/query-compute'
 import { createQuery } from './create-query'
 
-function getNextPropertyPath<TVal>(params: GetNextPropertyPathParams<TVal>) {
-  const { propertyPath, value, operator, type } = params
-
-  return `${propertyPath} ${operator} ${value === null 
-    ? 'null' 
-    : typeof value === type
-      ? value 
-      : value?.toString()}`
-}
-
 function computeBuilder(propertyPath: string): Record<string, (...args: any[]) => unknown> {
   return {
     as: <TAlias extends string>(alias: TAlias) => ({
       toString: () => `${propertyPath} as ${alias}`,
-      _alias: alias,
-      _type: undefined
     }),
     toString: () => propertyPath,
+
+    /////////////////////
+    // STRING METHODS
     substring: (start: number, length?: number) => {
       const args = length !== undefined ? `${start},${length}` : start.toString()
 
@@ -51,6 +42,9 @@ function computeBuilder(propertyPath: string): Record<string, (...args: any[]) =
         return computeBuilder(result)
       }
     },
+
+    /////////////////////
+    // BOOLEAN METHODS
     and: (value: boolean | ComputeBoolean | ComputeExpression | null) => 
       computeBuilder(getNextPropertyPath({
         propertyPath,
@@ -80,6 +74,9 @@ function computeBuilder(propertyPath: string): Record<string, (...args: any[]) =
         operator: 'ne',
         type: 'boolean'
       })),
+
+    /////////////////////
+    // MATHEMATICAL METHODS
     multiply: (value: number | ComputeNumber | ComputeExpression | null) => 
       computeBuilder(getNextPropertyPath({
         propertyPath,
@@ -109,6 +106,9 @@ function computeBuilder(propertyPath: string): Record<string, (...args: any[]) =
         operator: 'sub',
         type: 'number'
       })),
+
+    /////////////////////
+    // DATE METHODS
     year: () => computeBuilder(`year(${propertyPath})`),
     month: () => computeBuilder(`month(${propertyPath})`),
     day: () => computeBuilder(`day(${propertyPath})`),
@@ -118,6 +118,16 @@ function computeBuilder(propertyPath: string): Record<string, (...args: any[]) =
     date: () => computeBuilder(`date(${propertyPath})`),
     time: () => computeBuilder(`time(${propertyPath})`)
   }
+}
+
+function getNextPropertyPath<TVal>(params: GetNextPropertyPathParams<TVal>) {
+  const { propertyPath, value, operator, type } = params
+
+  return `${propertyPath} ${operator} ${value === null 
+    ? 'null' 
+    : typeof value === type
+      ? value 
+      : value?.toString()}`
 }
 
 function makeCompute<T>(): ComputeBuilder<T> {
